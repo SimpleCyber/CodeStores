@@ -28,7 +28,7 @@ const NavigationBar = () =>{
               <Zap size={30} />
             </span>
             <span className="text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text">
-              InstaCode
+            Buildo
             </span>
           </div>
 
