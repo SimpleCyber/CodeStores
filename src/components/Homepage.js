@@ -97,7 +97,7 @@ const Homepage = () => {
             industry-ready projects.
           </p>
 
-          <div className="space-y-4 text-xl mb-8 text-slate-950 dark:text-gray-500">
+          <div className="space-y-4 text-xl mb-8 text-gray-500">
             {activeTab === "features" &&
               project.features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3">
