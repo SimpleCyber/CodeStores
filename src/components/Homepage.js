@@ -120,12 +120,12 @@ const Homepage = () => {
           </div>
         </div>
 
-        <div className="relative w-[600px]">
-          <div className="absolute inset-0 bg-black/30 rounded-lg w-[600px] h-[350px]"></div>
+        <div className="relative w-full max-w-[600px] mx-auto">
+          <div className="absolute inset-0 bg-black/30 rounded-lg"></div>
           <img
             src={process.env.PUBLIC_URL + "/home.jpg"}
             alt="Home"
-            className="w-[600px] h-[350px] object-cover rounded-lg shadow-lg"
+            className="w-full h-auto sm:h-[250px] md:h-[300px] lg:h-[350px] object-cover rounded-lg shadow-lg"
           />
         </div>
 
