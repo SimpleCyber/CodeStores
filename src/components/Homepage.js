@@ -92,7 +92,7 @@ const Homepage = () => {
           <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text">
             Transform Your Portfolio
           </h1>
-          <p className="text-xl mb-8 text-slate-950 dark:text-gray-500">
+          <p className="text-xl mb-8 text-gray-500">
             Elevate your academic and professional journey with cutting-edge,
             industry-ready projects.
           </p>
