@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Moon, Sun, Search } from 'lucide-react';
 
+import NavigationBar from './ui/header';
+
 const ProjectsPage = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categories = [
@@ -48,14 +50,7 @@ const ProjectsPage = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       {/* Navigation */}
-      <nav className={`px-6 py-4 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">InstatCode</h1>
-          <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-        </div>
-      </nav>
+      <NavigationBar />
 
       {/* Search and Filter Section */}
       <div className="container mx-auto px-6 py-8">

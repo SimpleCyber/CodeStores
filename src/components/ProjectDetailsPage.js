@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Moon, Sun, Clock, Book, Code, Download, CheckCircle } from 'lucide-react';
 
+import NavigationBar from './ui/header';
+
+
 const ProjectDetailsPage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState('features');
@@ -34,17 +37,13 @@ const ProjectDetailsPage = () => {
     ]
   };
 
+
+  
+
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-slate-200'} text-gray-900 dark:text-white`}>
       {/* Navigation */}
-      <nav className={`px-6 py-4 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">InstatCode</h1>
-          <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-        </div>
-      </nav>
+      <NavigationBar />
 
       {/* Project Details */}
       <div className="container mx-auto px-6 py-8">
