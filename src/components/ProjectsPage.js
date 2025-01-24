@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Moon, Sun, Search } from 'lucide-react';
+import {Search } from 'lucide-react';
 
 import NavigationBar from './ui/header';
 

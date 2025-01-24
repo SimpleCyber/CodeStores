@@ -129,15 +129,6 @@ const Homepage = () => {
           />
         </div>
 
-        <div className="hidden md:block">
-          <div className="bg-gradient-to-br from-purple-200 to-blue-200 dark:from-purple-800 dark:to-blue-800 rounded-xl p-6 shadow-2xl transform -rotate-6 hover:rotate-0 transition-transform">
-            <img
-              src="/api/placeholder/500/400"
-              alt="Project Showcase"
-              className="rounded-lg shadow-lg"
-            />
-          </div>
-        </div>
       </div>
 
       {/* Features Section */}
