@@ -5,7 +5,7 @@ import NavigationBar from './ui/header';
 
 
 const ProjectDetailsPage = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState('features');
 
   // Example project data
@@ -29,12 +29,6 @@ const ProjectDetailsPage = () => {
       "User manual",
       "Installation guide"
     ],
-    requirements: [
-      "Basic understanding of web development",
-      "Familiarity with JavaScript",
-      "MongoDB Atlas account",
-      "Node.js environment"
-    ]
   };
 
 
@@ -99,7 +93,7 @@ const ProjectDetailsPage = () => {
           {/* Tabs */}
           <div className="mb-8">
             <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
-              {['features', 'documentation', 'requirements'].map((tab) => (
+              {['features', 'documentation'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -128,13 +122,6 @@ const ProjectDetailsPage = () => {
                 <div key={index} className="flex items-center gap-3">
                   <Book className="w-5 h-5 text-blue-500" />
                   <span>{doc}</span>
-                </div>
-              ))}
-
-              {activeTab === 'requirements' && project.requirements.map((req, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-yellow-500" />
-                  <span>{req}</span>
                 </div>
               ))}
             </div>

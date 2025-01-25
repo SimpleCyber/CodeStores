@@ -40,7 +40,6 @@ const ProjectsPage = () => {
       technologies: ["Java", "Spring Boot", "MySQL"],
       difficulty: "Intermediate"
     }
-    // Add more projects as needed
   ];
 
   const filteredProjects = selectedCategory === 'all' 

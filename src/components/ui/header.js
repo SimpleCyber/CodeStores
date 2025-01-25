@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Zap,Moon, Sun } from 'lucide-react';
-
-
+import { Zap,Moon, Sun, X } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 
 
 const NavigationBar = () =>{
+   const navigate = useNavigate();
+    const handleGoHome = () => {
+      navigate("/");
+    };
+  
+
       const [darkMode, setDarkMode] = useState(() => {
         // Check localStorage first, default to true if not set
         const savedMode = localStorage.getItem('darkMode');
@@ -34,10 +39,10 @@ const NavigationBar = () =>{
 
           </div>
           <button 
-            onClick={() => setDarkMode(!darkMode)} 
+            onClick={handleGoHome}
             className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
           >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {darkMode ? <X className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
         </div>
       </nav>

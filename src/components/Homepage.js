@@ -11,10 +11,18 @@ import {
 import { useNavigate } from "react-router-dom";
 import NavigationBar from "./ui/header";
 
+
+
+
+
 const Homepage = () => {
   const navigate = useNavigate();
   const handlePrjectsPage = () => {
     navigate("/projects");
+  };
+
+  const contactPage = () => {
+    navigate("/contact");
   };
 
   const [activeTab, setActiveTab] = useState("features");
@@ -114,8 +122,8 @@ const Homepage = () => {
             >
               Explore Projects
             </button>
-            <button className="px-6 py-3 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30">
-              Learn More
+            <button className="px-6 py-3 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30" onClick={contactPage}>
+              Contact Us
             </button>
           </div>
         </div>
