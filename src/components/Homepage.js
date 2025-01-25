@@ -91,7 +91,7 @@ const Homepage = () => {
       <div className="container mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center">
         <div>
           <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text">
-            Transform Your Portfolio
+            Get Your Final Year Projects Done
           </h1>
           <p className="text-xl mb-8 text-gray-500">
             Elevate your academic and professional journey with cutting-edge,
