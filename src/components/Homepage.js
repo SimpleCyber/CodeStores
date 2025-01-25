@@ -11,10 +11,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import NavigationBar from "./ui/header";
 
-
-
-
-
 const Homepage = () => {
   const navigate = useNavigate();
   const handlePrjectsPage = () => {
@@ -122,7 +118,10 @@ const Homepage = () => {
             >
               Explore Projects
             </button>
-            <button className="px-6 py-3 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30" onClick={contactPage}>
+            <button
+              className="px-6 py-3 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30"
+              onClick={contactPage}
+            >
               Contact Us
             </button>
           </div>
@@ -136,7 +135,6 @@ const Homepage = () => {
             className="w-full h-auto sm:h-[250px] md:h-[300px] lg:h-[350px] object-cover rounded-lg shadow-lg"
           />
         </div>
-
       </div>
 
       {/* Features Section */}
@@ -179,7 +177,10 @@ const Homepage = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-80">
             Transform your academic projects into professional masterpieces
           </p>
-          <button className="px-8 py-3 bg-white text-purple-600 rounded-lg hover:bg-purple-100 transition-colors" onClick={handlePrjectsPage}>
+          <button
+            className="px-8 py-3 bg-white text-purple-600 rounded-lg hover:bg-purple-100 transition-colors"
+            onClick={handlePrjectsPage}
+          >
             Get Started
           </button>
         </div>

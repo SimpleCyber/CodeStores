@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, User, Mail, MessageCircle, X } from 'lucide-react';
 import NavigationBar from './ui/header';
 
@@ -17,9 +17,29 @@ const ContactForm = () => {
     }));
   };
 
+
+  const [darkMode, setDarkMode] = useState(() => {
+      // Check localStorage first, default to true if not set
+      const savedMode = localStorage.getItem("darkMode");
+      return savedMode !== null ? JSON.parse(savedMode) : true;
+    });
+  
+    useEffect(() => {
+      // Update localStorage when darkMode changes
+      localStorage.setItem("darkMode", JSON.stringify(darkMode));
+      // Update body class for global dark mode
+      document.body.classList.toggle("dark", darkMode);
+    }, [darkMode]);
+
   return (
+
     <>
     <NavigationBar />
+    <div
+      className={`min-h-screen ${
+        darkMode ? "bg-gray-900" : "bg-slate-200"
+      } text-gray-900 dark:text-white`}
+    ></div>
     <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 transform transition-all hover:scale-105">
