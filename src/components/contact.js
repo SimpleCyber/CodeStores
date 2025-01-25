@@ -39,8 +39,8 @@ const ContactForm = () => {
       className={`min-h-screen ${
         darkMode ? "bg-gray-900" : "bg-slate-200"
       } text-gray-900 dark:text-white`}
-    ></div>
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center px-6 py-12">
+    >
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 transform transition-all hover:scale-105">
           <h3 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text">
@@ -119,6 +119,8 @@ const ContactForm = () => {
         </div>
       </div>
     </div>
+    </div>
+    
     </>
   );
 };
