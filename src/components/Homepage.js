@@ -31,15 +31,12 @@ const Homepage = () => {
   };
 
   const [darkMode, setDarkMode] = useState(() => {
-    // Check localStorage first, default to true if not set
     const savedMode = localStorage.getItem("darkMode");
     return savedMode !== null ? JSON.parse(savedMode) : true;
   });
 
   useEffect(() => {
-    // Update localStorage when darkMode changes
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
-    // Update body class for global dark mode
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
