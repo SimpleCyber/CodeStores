@@ -1,8 +1,11 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Save, X, Upload, Trash2 } from "lucide-react";
-import { addProject, updateProject } from "../../firebase/projectService";
+import { useState, useEffect } from "react"
+import { Save, X, Upload, Trash2 } from "lucide-react"
+import { addProject, updateProject, uploadImage } from "../../firebase/projectService"
+
+
+
 
 const ProjectForm = ({ project, onClose }) => {
   const [formData, setFormData] = useState({
@@ -16,14 +19,16 @@ const ProjectForm = ({ project, onClose }) => {
     youtubeVideo: "",
     timeline: "",
     difficulty: "beginner",
-  });
-  const [techInput, setTechInput] = useState("");
-  const [featureInput, setFeatureInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  })
+  const [techInput, setTechInput] = useState("")
+  const [featureInput, setFeatureInput] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
-  const categories = ["python", "iot", "mern", "java", "arvr", "game"];
-  const difficulties = ["beginner", "intermediate", "advanced"];
+  const categories = ["python", "iot", "mern", "java", "arvr", "game"]
+  const difficulties = ["beginner", "intermediate", "advanced"]
+
+  
 
   useEffect(() => {
     if (project) {
@@ -38,128 +43,119 @@ const ProjectForm = ({ project, onClose }) => {
         youtubeVideo: project.youtubeVideo || "",
         timeline: project.timeline || "",
         difficulty: project.difficulty || "beginner",
-      });
+      })
     }
-  }, [project]);
+  }, [project])
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
+
+  
 
   const addTechStack = () => {
     if (techInput.trim() && !formData.techStack.includes(techInput.trim())) {
       setFormData((prev) => ({
         ...prev,
         techStack: [...prev.techStack, techInput.trim()],
-      }));
-      setTechInput("");
+      }))
+      setTechInput("")
     }
-  };
+  }
+
+  
 
   const removeTechStack = (index) => {
     setFormData((prev) => ({
       ...prev,
       techStack: prev.techStack.filter((_, i) => i !== index),
-    }));
-  };
+    }))
+  }
 
   const addFeature = () => {
-    if (
-      featureInput.trim() &&
-      !formData.features.includes(featureInput.trim())
-    ) {
+    if (featureInput.trim() && !formData.features.includes(featureInput.trim())) {
       setFormData((prev) => ({
         ...prev,
         features: [...prev.features, featureInput.trim()],
-      }));
-      setFeatureInput("");
+      }))
+      setFeatureInput("")
     }
-  };
+  }
 
   const removeFeature = (index) => {
     setFormData((prev) => ({
       ...prev,
       features: prev.features.filter((_, i) => i !== index),
-    }));
-  };
+    }))
+  }
 
   // ...existing code...
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+const handleImageUpload = async (e) => {
+  const files = Array.from(e.target.files)
+  if (files.length === 0) return
 
-    setUploadingImage(true);
-    try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "instantcode");
+  setUploadingImage(true)
+  try {
+    const base64Promises = files.map((file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = (error) => reject(error)
+      })
+    })
 
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+    const base64Images = await Promise.all(base64Promises)
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, ...base64Images],
+    }))
+  } catch (error) {
+    console.error("Error converting images:", error)
+    alert("Error processing images")
+  } finally {
+    setUploadingImage(false)
+  }
+}
 
-        const data = await response.json();
-        return data.secure_url;
-      });
-
-      const uploadedUrls = await Promise.all(uploadPromises);
-      setFormData((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uploadedUrls],
-      }));
-    } catch (error) {
-      console.error("Error uploading images:", error);
-      alert("Error uploading images");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  // ...existing code...
+// ...existing code...
 
   const removeImage = (index) => {
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
+    }))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
       if (project) {
-        await updateProject(project.id, formData);
+        await updateProject(project.id, formData)
       } else {
-        await addProject(formData);
+        await addProject(formData)
       }
-      onClose();
+      onClose()
     } catch (error) {
-      console.error("Error saving project:", error);
-      alert("Error saving project");
+      console.error("Error saving project:", error)
+      alert("Error saving project")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
-            {project ? "Edit Project" : "Add New Project"}
-          </h1>
+          <h1 className="text-3xl font-bold">{project ? "Edit Project" : "Add New Project"}</h1>
           <button
             onClick={onClose}
             className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg flex items-center gap-2"
@@ -169,15 +165,10 @@ const ProjectForm = ({ project, onClose }) => {
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-gray-800 rounded-lg p-8 space-y-6"
-        >
+        <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Project Name
-              </label>
+              <label className="block text-sm font-medium mb-2">Project Name</label>
               <input
                 type="text"
                 name="name"
@@ -206,9 +197,7 @@ const ProjectForm = ({ project, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Short Description
-            </label>
+            <label className="block text-sm font-medium mb-2">Short Description</label>
             <input
               type="text"
               name="shortDescription"
@@ -221,9 +210,7 @@ const ProjectForm = ({ project, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Detailed Description
-            </label>
+            <label className="block text-sm font-medium mb-2">Detailed Description</label>
             <textarea
               name="detailedDescription"
               value={formData.detailedDescription}
@@ -249,9 +236,7 @@ const ProjectForm = ({ project, onClose }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Difficulty
-              </label>
+              <label className="block text-sm font-medium mb-2">Difficulty</label>
               <select
                 name="difficulty"
                 value={formData.difficulty}
@@ -268,9 +253,7 @@ const ProjectForm = ({ project, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              YouTube Video URL
-            </label>
+            <label className="block text-sm font-medium mb-2">YouTube Video URL</label>
             <input
               type="url"
               name="youtubeVideo"
@@ -290,9 +273,7 @@ const ProjectForm = ({ project, onClose }) => {
                 onChange={(e) => setTechInput(e.target.value)}
                 className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Add technology"
-                onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addTechStack())
-                }
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTechStack())}
               />
               <button
                 type="button"
@@ -304,10 +285,7 @@ const ProjectForm = ({ project, onClose }) => {
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.techStack.map((tech, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-600 px-3 py-1 rounded-full flex items-center gap-2"
-                >
+                <span key={index} className="bg-gray-600 px-3 py-1 rounded-full flex items-center gap-2">
                   {tech}
                   <button
                     type="button"
@@ -330,24 +308,15 @@ const ProjectForm = ({ project, onClose }) => {
                 onChange={(e) => setFeatureInput(e.target.value)}
                 className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Add feature"
-                onKeyPress={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addFeature())
-                }
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addFeature())}
               />
-              <button
-                type="button"
-                onClick={addFeature}
-                className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg"
-              >
+              <button type="button" onClick={addFeature} className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg">
                 Add
               </button>
             </div>
             <div className="space-y-2">
               {formData.features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-700 px-4 py-2 rounded-lg flex items-center justify-between"
-                >
+                <div key={index} className="bg-gray-700 px-4 py-2 rounded-lg flex items-center justify-between">
                   <span>{feature}</span>
                   <button
                     type="button"
@@ -362,9 +331,7 @@ const ProjectForm = ({ project, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Project Images
-            </label>
+            <label className="block text-sm font-medium mb-2">Project Images</label>
             <div className="mb-4">
               <input
                 type="file"
@@ -383,32 +350,29 @@ const ProjectForm = ({ project, onClose }) => {
               </label>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {formData.images.map((imageUrl, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={imageUrl}
-                    alt={`Project ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  {formData.images.map((image, index) => (
+    <div key={index} className="relative">
+      <img
+        src={image}
+        alt={`Project ${index + 1}`}
+        className="w-full h-24 object-cover rounded-lg"
+      />
+      <button
+        type="button"
+        onClick={() => removeImage(index)}
+        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  ))}
+</div>
+
           </div>
 
           <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg"
-            >
+            <button type="button" onClick={onClose} className="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded-lg">
               Cancel
             </button>
             <button
@@ -423,7 +387,7 @@ const ProjectForm = ({ project, onClose }) => {
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ProjectForm;
+export default ProjectForm

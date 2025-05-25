@@ -19,7 +19,6 @@ const AdminLogin = ({ onLogin }) => {
     try {
       const adminUsername = process.env.REACT_APP_ADMIN_USERNAME
       const adminPassword = process.env.REACT_APP_ADMIN_PASSWORD
-      console.log(adminPassword, adminUsername)
 
       if (credentials.username === adminUsername && credentials.password === adminPassword) {
         localStorage.setItem("adminLoggedIn", "true")
