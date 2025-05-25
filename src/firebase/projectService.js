@@ -16,7 +16,6 @@ import {
 } from "firebase/storage";
 import { db, storage } from "./config";
 
-// ✅ Removed Cloudinary Node SDK import
 
 // ✅ Safe browser-based upload using Cloudinary's REST API
 const uploadToCloudinary = async (file) => {
