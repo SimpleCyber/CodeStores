@@ -1,266 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Plus, Edit, Trash2, Save, X, ImagePlus 
-} from 'lucide-react';
+"use client"
 
-const AdminProjectPage = () => {
-  const [projects, setProjects] = useState([]);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [currentProject, setCurrentProject] = useState({
-    title: '',
-    description: '',
-    timeline: '',
-    technologies: [],
-    features: [],
-    documentation: [],
-    category: '',
-    image: null
-  });
+import { useState, useEffect } from "react"
+import { Plus, Edit, Trash2, Eye, LogOut } from "lucide-react"
+import AdminLogin from "./AdminLogin"
+import ProjectForm from "./ProjectForm"
+import { getAllProjects, deleteProject } from "../../firebase/projectService"
 
-  // Load projects from local storage on component mount
+const AdminMain = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [projects, setProjects] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [editingProject, setEditingProject] = useState(null)
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
-    const savedProjects = JSON.parse(localStorage.getItem('instatcodeProjects') || '[]');
-    setProjects(savedProjects);
-  }, []);
+    const adminStatus = localStorage.getItem("adminLoggedIn")
+    if (adminStatus === "true") {
+      setIsLoggedIn(true)
+      fetchProjects()
+    }
+  }, [])
 
-  // Save projects to local storage whenever projects change
-  useEffect(() => {
-    localStorage.setItem('instatcodeProjects', JSON.stringify(projects));
-  }, [projects]);
+  const fetchProjects = async () => {
+    setLoading(true)
+    try {
+      const projectsData = await getAllProjects()
+      setProjects(projectsData)
+    } catch (error) {
+      console.error("Error fetching projects:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const handleAddProject = () => {
-    const newProject = {
-      ...currentProject,
-      id: Date.now().toString(),
-      technologies: currentProject.technologies.split(',').map(tech => tech.trim()),
-      features: currentProject.features.split(',').map(feature => feature.trim()),
-      documentation: currentProject.documentation.split(',').map(doc => doc.trim())
-    };
+  const handleLogout = () => {
+    localStorage.removeItem("adminLoggedIn")
+    setIsLoggedIn(false)
+  }
 
-    setProjects([...projects, newProject]);
-    setIsAddModalOpen(false);
-    // Reset form
-    setCurrentProject({
-      title: '',
-      description: '',
-      timeline: '',
-      technologies: [],
-      features: [],
-      documentation: [],
-      category: '',
-      image: null
-    });
-  };
+  const handleDeleteProject = async (id) => {
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      try {
+        await deleteProject(id)
+        fetchProjects()
+      } catch (error) {
+        console.error("Error deleting project:", error)
+        alert("Error deleting project")
+      }
+    }
+  }
 
-  const handleDeleteProject = (id) => {
-    setProjects(projects.filter(project => project.id !== id));
-  };
+  const handleEditProject = (project) => {
+    setEditingProject(project)
+    setShowForm(true)
+  }
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCurrentProject({
-        ...currentProject,
-        image: reader.result
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  const handleFormClose = () => {
+    setShowForm(false)
+    setEditingProject(null)
+    fetchProjects()
+  }
+
+  if (!isLoggedIn) {
+    return <AdminLogin onLogin={setIsLoggedIn} />
+  }
+
+  if (showForm) {
+    return <ProjectForm project={editingProject} onClose={handleFormClose} />
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Project Management</h1>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 transition"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Projects Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(project => (
-            <div 
-              key={project.id} 
-              className="bg-white rounded-lg shadow-md overflow-hidden"
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg flex items-center gap-2"
             >
-              {project.image && (
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-2">{project.title}</h2>
-                <p className="text-gray-600 mb-4">{project.description}</p>
-                
-                <div className="flex justify-between">
-                  <span className="text-sm text-blue-500">{project.category}</span>
-                  <div className="flex space-x-2">
-                    <button 
-                      className="text-blue-500 hover:bg-blue-100 p-2 rounded"
-                      // Implement edit functionality
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteProject(project.id)}
-                      className="text-red-500 hover:bg-red-100 p-2 rounded"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+              <Plus className="w-5 h-5" />
+              Add Project
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
         </div>
 
-        {/* Add Project Modal */}
-        {isAddModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Add New Project</h2>
-                <button 
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-800"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form className="space-y-4">
-                {/* Image Upload */}
-                <div>
-                  <label className="block mb-2">Project Image</label>
-                  <div className="flex items-center">
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="imageUpload"
-                    />
-                    <label 
-                      htmlFor="imageUpload"
-                      className="flex items-center px-4 py-2 bg-blue-100 text-blue-600 rounded cursor-pointer"
-                    >
-                      <ImagePlus className="mr-2 w-5 h-5" />
-                      Upload Image
-                    </label>
-                    {currentProject.image && (
-                      <img 
-                        src={currentProject.image} 
-                        alt="Project" 
-                        className="ml-4 w-20 h-20 object-cover rounded"
-                      />
-                    )}
-                  </div>
-                </div>
-                {/* Input Fields */}
-                <input 
-                  type="text"
-                  placeholder="Project Title"
-                  value={currentProject.title}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    title: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                />
-                <textarea 
-                  placeholder="Project Description"
-                  value={currentProject.description}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    description: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                />
-                <input 
-                  type="text"
-                  placeholder="Timeline (e.g., 10-12 days)"
-                  value={currentProject.timeline}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    timeline: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                />
-                <input 
-                  type="text"
-                  placeholder="Technologies (comma-separated)"
-                  value={currentProject.technologies}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    technologies: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                />
-                <input 
-                  type="text"
-                  placeholder="Features (comma-separated)"
-                  value={currentProject.features}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    features: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                />
-                <input 
-                  type="text"
-                  placeholder="Documentation (comma-separated)"
-                  value={currentProject.documentation}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    documentation: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                />
-                <select 
-                  value={currentProject.category}
-                  onChange={(e) => setCurrentProject({
-                    ...currentProject, 
-                    category: e.target.value
-                  })}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Select Category</option>
-                  <option value="mern">MERN Stack</option>
-                  <option value="python">Python</option>
-                  <option value="java">Java</option>
-                  <option value="ai">AI/ML</option>
-                </select>
-
-                <div className="flex justify-end space-x-4">
-                  <button 
-                    type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 bg-gray-200 rounded"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={handleAddProject}
-                    className="px-4 py-2 bg-blue-500 text-white rounded"
-                  >
-                    Save Project
-                  </button>
-                </div>
-              </form>
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <p className="mt-2">Loading projects...</p>
+          </div>
+        ) : (
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Project Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Tech Stack
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {projects.map((project) => (
+                    <tr key={project.id} className="hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-white">{project.name}</div>
+                        <div className="text-sm text-gray-400">{project.shortDescription}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {project.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {project.techStack?.slice(0, 3).map((tech, index) => (
+                            <span key={index} className="px-2 py-1 text-xs bg-gray-600 rounded">
+                              {tech}
+                            </span>
+                          ))}
+                          {project.techStack?.length > 3 && (
+                            <span className="px-2 py-1 text-xs bg-gray-600 rounded">
+                              +{project.techStack.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => window.open(`/project/${project.id}`, "_blank")}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEditProject(project)}
+                            className="text-yellow-400 hover:text-yellow-300"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+            {projects.length === 0 && (
+              <div className="text-center py-8 text-gray-400">No projects found. Add your first project!</div>
+            )}
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AdminProjectPage;
+export default AdminMain
