@@ -1,11 +1,110 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React,{ useState, useEffect, useCallback, useMemo } from "react"
 import { useParams } from "react-router-dom"
 import { Clock, Book, Code, Download, CheckCircle, ArrowLeft } from "lucide-react"
 import { Link } from "react-router-dom"
 import NavigationBar from "./ui/header"
 import { getProjectById } from "../firebase/projectService"
+
+// Memoized components for better performance
+const ProjectImage = React.memo(({ src, alt, className }) => {
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
+  return (
+    <div className={`relative ${className}`}>
+      {!imageLoaded && !imageError && (
+        <div className="absolute inset-0 bg-gray-300 animate-pulse rounded-lg" />
+      )}
+      <img
+        src={imageError ? "/placeholder.svg" : src}
+        alt={alt}
+        className={`w-full h-48 object-cover rounded-lg transition-opacity duration-300 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        onLoad={() => setImageLoaded(true)}
+        onError={() => setImageError(true)}
+        loading="lazy"
+      />
+    </div>
+  )
+})
+
+const InfoCard = React.memo(({ icon: Icon, title, content, darkMode }) => (
+  <div className={`p-4 rounded-lg ${darkMode ? "bg-gray-700" : "bg-white"} flex items-center gap-3`}>
+    <Icon className="w-6 h-6 text-blue-500" />
+    <div>
+      <h3 className="font-semibold">{title}</h3>
+      <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
+        {content}
+      </p>
+    </div>
+  </div>
+))
+
+const TechTag = React.memo(({ tech, darkMode }) => (
+  <span
+    className={`px-4 py-2 rounded-full ${
+      darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-700"
+    }`}
+  >
+    {tech}
+  </span>
+))
+
+const FeatureItem = React.memo(({ feature }) => (
+  <div className="flex items-center gap-3">
+    <CheckCircle className="w-5 h-5 text-green-500" />
+    <span>{feature}</span>
+  </div>
+))
+
+const LoadingSkeleton = React.memo(({ darkMode }) => (
+  <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-slate-200"}`}>
+    <NavigationBar />
+    <div className="container mx-auto px-6 py-8">
+      <div className="animate-pulse">
+        <div className={`h-4 w-32 ${darkMode ? "bg-gray-700" : "bg-gray-300"} rounded mb-6`} />
+        <div className={`rounded-lg p-8 ${darkMode ? "bg-gray-800" : "bg-gray-50"}`}>
+          <div className={`h-8 w-3/4 ${darkMode ? "bg-gray-700" : "bg-gray-300"} rounded mb-6`} />
+          <div className={`h-4 w-full ${darkMode ? "bg-gray-700" : "bg-gray-300"} rounded mb-2`} />
+          <div className={`h-4 w-2/3 ${darkMode ? "bg-gray-700" : "bg-gray-300"} rounded mb-8`} />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className={`h-48 ${darkMode ? "bg-gray-700" : "bg-gray-300"} rounded-lg`} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+))
+
+const ErrorState = React.memo(({ darkMode, error }) => (
+  <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-slate-200"} text-gray-900 dark:text-white`}>
+    <NavigationBar />
+    <div className="container mx-auto px-6 py-8 text-center">
+      <h1 className="text-2xl font-bold mb-4">
+        {error === "Project not found" ? "Project Not Found" : "Error Loading Project"}
+      </h1>
+      <p className="mb-4">
+        {error === "Project not found" 
+          ? "The project you're looking for doesn't exist." 
+          : "There was an error loading the project. Please try again."
+        }
+      </p>
+      <Link
+        to="/projects"
+        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Projects
+      </Link>
+    </div>
+  </div>
+))
 
 const ProjectDetailsPage = () => {
   const { id } = useParams()
@@ -15,68 +114,73 @@ const ProjectDetailsPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchProject()
-  }, [id])
+  // Memoized YouTube embed URL
+  const embedUrl = useMemo(() => {
+    if (!project?.youtubeVideo) return null
+    const videoId = project.youtubeVideo.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null
+  }, [project?.youtubeVideo])
 
-  const fetchProject = async () => {
+  // Memoized project info cards data
+  const infoCards = useMemo(() => [
+    {
+      icon: Clock,
+      title: "Timeline",
+      content: project?.timeline || "Contact for details"
+    },
+    {
+      icon: Book,
+      title: "Difficulty",
+      content: project?.difficulty
+        ? project.difficulty.charAt(0).toUpperCase() + project.difficulty.slice(1)
+        : "Intermediate"
+    },
+    {
+      icon: Code,
+      title: "Category",
+      content: project?.category ? project.category.toUpperCase() : "General"
+    }
+  ], [project])
+
+  const fetchProject = useCallback(async () => {
+    if (!id) return
+    
     setLoading(true)
+    setError(null)
+    
     try {
       const projectData = await getProjectById(id)
       setProject(projectData)
     } catch (error) {
       console.error("Error fetching project:", error)
-      setError("Project not found")
+      setError(error.message || "Failed to load project")
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
 
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null
-    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
-    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null
-  }
+  useEffect(() => {
+    fetchProject()
+  }, [fetchProject])
 
+  // Early returns for loading and error states
   if (loading) {
-    return (
-      <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-slate-200"} text-gray-900 dark:text-white`}>
-        <NavigationBar />
-        <div className="container mx-auto px-6 py-8 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="mt-4">Loading project details...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSkeleton darkMode={darkMode} />
   }
 
   if (error || !project) {
-    return (
-      <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-slate-200"} text-gray-900 dark:text-white`}>
-        <NavigationBar />
-        <div className="container mx-auto px-6 py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
-          <p className="mb-4">The project you're looking for doesn't exist.</p>
-          <Link
-            to="/projects"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Projects
-          </Link>
-        </div>
-      </div>
-    )
+    return <ErrorState darkMode={darkMode} error={error} />
   }
-
-  const embedUrl = getYouTubeEmbedUrl(project.youtubeVideo)
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-slate-200"} text-gray-900 dark:text-white`}>
       <NavigationBar />
 
       <div className="container mx-auto px-6 py-8">
-        <Link to="/projects" className="inline-flex items-center gap-2 mb-6 text-blue-500 hover:text-blue-600">
+        <Link 
+          to="/projects" 
+          className="inline-flex items-center gap-2 mb-6 text-blue-500 hover:text-blue-600 transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
           Back to Projects
         </Link>
@@ -94,11 +198,10 @@ const ProjectDetailsPage = () => {
               <h2 className="text-xl font-semibold mb-4">Project Images</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {project.images.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image || "/placeholder.svg"}
+                  <ProjectImage
+                    key={`${project.id}-image-${index}`}
+                    src={image}
                     alt={`${project.name} ${index + 1}`}
-                    className="w-full h-48 object-cover rounded-lg"
                   />
                 ))}
               </div>
@@ -110,42 +213,28 @@ const ProjectDetailsPage = () => {
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Project Demo</h2>
               <div className="aspect-video">
-                <iframe src={embedUrl} title="Project Demo" className="w-full h-full rounded-lg" allowFullScreen />
+                <iframe 
+                  src={embedUrl} 
+                  title="Project Demo" 
+                  className="w-full h-full rounded-lg" 
+                  allowFullScreen 
+                  loading="lazy"
+                />
               </div>
             </div>
           )}
 
           {/* Quick Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className={`p-4 rounded-lg ${darkMode ? "bg-gray-700" : "bg-white"} flex items-center gap-3`}>
-              <Clock className="w-6 h-6 text-blue-500" />
-              <div>
-                <h3 className="font-semibold">Timeline</h3>
-                <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
-                  {project.timeline || "Contact for details"}
-                </p>
-              </div>
-            </div>
-            <div className={`p-4 rounded-lg ${darkMode ? "bg-gray-700" : "bg-white"} flex items-center gap-3`}>
-              <Book className="w-6 h-6 text-blue-500" />
-              <div>
-                <h3 className="font-semibold">Difficulty</h3>
-                <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
-                  {project.difficulty
-                    ? project.difficulty.charAt(0).toUpperCase() + project.difficulty.slice(1)
-                    : "Intermediate"}
-                </p>
-              </div>
-            </div>
-            <div className={`p-4 rounded-lg ${darkMode ? "bg-gray-700" : "bg-white"} flex items-center gap-3`}>
-              <Code className="w-6 h-6 text-blue-500" />
-              <div>
-                <h3 className="font-semibold">Category</h3>
-                <p className={darkMode ? "text-gray-300" : "text-gray-600"}>
-                  {project.category ? project.category.toUpperCase() : "General"}
-                </p>
-              </div>
-            </div>
+            {infoCards.map((card, index) => (
+              <InfoCard
+                key={index}
+                icon={card.icon}
+                title={card.title}
+                content={card.content}
+                darkMode={darkMode}
+              />
+            ))}
           </div>
 
           {/* Technologies */}
@@ -154,14 +243,11 @@ const ProjectDetailsPage = () => {
               <h2 className="text-xl font-semibold mb-4">Technologies Used</h2>
               <div className="flex flex-wrap gap-2">
                 {project.techStack.map((tech, index) => (
-                  <span
-                    key={index}
-                    className={`px-4 py-2 rounded-full ${
-                      darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    {tech}
-                  </span>
+                  <TechTag
+                    key={`${project.id}-tech-${index}`}
+                    tech={tech}
+                    darkMode={darkMode}
+                  />
                 ))}
               </div>
             </div>
@@ -172,7 +258,7 @@ const ProjectDetailsPage = () => {
             <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
               <button
                 onClick={() => setActiveTab("features")}
-                className={`px-6 py-3 ${
+                className={`px-6 py-3 transition-colors ${
                   activeTab === "features"
                     ? "border-b-2 border-blue-500 text-blue-500"
                     : darkMode
@@ -185,17 +271,17 @@ const ProjectDetailsPage = () => {
             </div>
 
             <div className="space-y-4">
-              {activeTab === "features" &&
-                project.features &&
+              {activeTab === "features" && project.features && project.features.length > 0 ? (
                 project.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span>{feature}</span>
-                  </div>
-                ))}
-
-              {activeTab === "features" && (!project.features || project.features.length === 0) && (
-                <p className={darkMode ? "text-gray-400" : "text-gray-600"}>No features listed for this project.</p>
+                  <FeatureItem
+                    key={`${project.id}-feature-${index}`}
+                    feature={feature}
+                  />
+                ))
+              ) : (
+                <p className={darkMode ? "text-gray-400" : "text-gray-600"}>
+                  No features listed for this project.
+                </p>
               )}
             </div>
           </div>
@@ -214,9 +300,13 @@ const ProjectDetailsPage = () => {
                 Request Project
               </Link>
               <button
-                className={`px-6 py-3 rounded-lg flex items-center gap-2 ${
+                className={`px-6 py-3 rounded-lg flex items-center gap-2 transition-colors ${
                   darkMode ? "bg-gray-600 hover:bg-gray-500" : "bg-white hover:bg-gray-100"
                 }`}
+                onClick={() => {
+                  // Add download functionality here
+                  console.log("Download project details")
+                }}
               >
                 <Download className="w-5 h-5" />
                 Download Details
