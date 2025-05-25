@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save, X, Upload, Trash2 } from "lucide-react";
-import {
-  addProject,
-  updateProject,
-  uploadImage,
-} from "../../firebase/projectService";
+import { addProject, updateProject } from "../../firebase/projectService";
 
 const ProjectForm = ({ project, onClose }) => {
   const [formData, setFormData] = useState({
@@ -99,23 +95,31 @@ const ProjectForm = ({ project, onClose }) => {
 
     setUploadingImage(true);
     try {
-      const base64Promises = files.map((file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
-        });
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "instantcode");
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await response.json();
+        return data.secure_url;
       });
 
-      const base64Images = await Promise.all(base64Promises);
+      const uploadedUrls = await Promise.all(uploadPromises);
       setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, ...base64Images],
+        images: [...prev.images, ...uploadedUrls],
       }));
     } catch (error) {
-      console.error("Error converting images:", error);
-      alert("Error processing images");
+      console.error("Error uploading images:", error);
+      alert("Error uploading images");
     } finally {
       setUploadingImage(false);
     }
@@ -380,10 +384,10 @@ const ProjectForm = ({ project, onClose }) => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {formData.images.map((image, index) => (
+              {formData.images.map((imageUrl, index) => (
                 <div key={index} className="relative">
                   <img
-                    src={image}
+                    src={imageUrl}
                     alt={`Project ${index + 1}`}
                     className="w-full h-24 object-cover rounded-lg"
                   />

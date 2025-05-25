@@ -1,28 +1,48 @@
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { db, storage } from "./config"
+import { v2 as cloudinary } from 'cloudinary'
 
 
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.REACT_APP_CLOUD_NAME,
+  api_key: process.env.REACT_APP_CLOUD_API_KEY,
+  api_secret: process.env.REACT_APP_CLOUD_API_SECRET,
+});
 
-export const convertToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = (error) => reject(error)
-  })
+
+// Upload image to Cloudinary
+const uploadToCloudinary = async (file) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'instantcode')
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    )
+
+    const data = await response.json()
+    return data.secure_url
+  } catch (error) {
+    console.error('Error uploading to Cloudinary:', error)
+    throw error
+  }
 }
-
-
 
 
 // Add a new project
 export const addProject = async (projectData) => {
   try {
-    // Convert image file to base64 if it exists
+    // Upload image to Cloudinary if it exists
     if (projectData.image && projectData.image instanceof File) {
-      const base64Image = await convertToBase64(projectData.image)
-      projectData.image = base64Image
+      const imageUrl = await uploadToCloudinary(projectData.image)
+      projectData.image = imageUrl
     }
 
     const docRef = await addDoc(collection(db, "projects"), {
@@ -88,13 +108,15 @@ export const getProjectById = async (id) => {
   }
 }
 
+
+
 // Update project
 export const updateProject = async (id, projectData) => {
   try {
-    // Convert image file to base64 if it exists
+    // Upload image to Cloudinary if it exists
     if (projectData.image && projectData.image instanceof File) {
-      const base64Image = await convertToBase64(projectData.image)
-      projectData.image = base64Image
+      const imageUrl = await uploadToCloudinary(projectData.image)
+      projectData.image = imageUrl
     }
 
     const docRef = doc(db, "projects", id)

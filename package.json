@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "cloudinary": "^2.6.1",
     "cra-template": "1.2.0",
     "firebase": "^11.8.1",
     "firebase-admin": "^13.4.0",
