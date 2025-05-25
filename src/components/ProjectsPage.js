@@ -20,7 +20,7 @@ const ProjectsPage = () => {
     { id: "iot", name: "IoT" },
     { id: "mern", name: "MERN Stack" },
     { id: "java", name: "Java" },
-    { id: "arvr", name: "AR/VR" },
+    { id: "app", name: "Mobile Application" },
     { id: "game", name: "Game Development" },
   ]
 

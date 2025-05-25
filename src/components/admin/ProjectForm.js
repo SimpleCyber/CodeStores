@@ -25,7 +25,7 @@ const ProjectForm = ({ project, onClose }) => {
   const [loading, setLoading] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
-  const categories = ["python", "iot", "mern", "java", "arvr", "game"]
+  const categories = ["python", "iot", "mern", "java", "app", "game"]
   const difficulties = ["beginner", "intermediate", "advanced"]
 
   
